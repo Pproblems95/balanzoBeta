@@ -17,25 +17,33 @@ export async function saveTransaction(
   amount: number,
   date: string
 ) {
+  console.log('guardando'); //aqui te quedaste
   const newTransaction = TransactionFactory.createTransaction(type, id, title, amount, date);
   const stored = await AsyncStorage.getItem(TRANSACTIONS_KEY);
   const transactions: Transaction[] = stored ? JSON.parse(stored) : [];
+  console.log('ANTES DE GUARDAR:', transactions);
+  console.log('AGREGANDO:', newTransaction);
   transactions.push(newTransaction);
+  
   await AsyncStorage.setItem(TRANSACTIONS_KEY, JSON.stringify(transactions));
+  const after = await AsyncStorage.getItem(TRANSACTIONS_KEY);
+  console.log('DESPUÉS DE GUARDAR:', after);
 }
 
 /**
  * Obtiene todas las transacciones del mes actual
  */
 export async function getTransactionsForCurrentMonth(): Promise<Transaction[]> {
-  const stored = await AsyncStorage.getItem(TRANSACTIONS_KEY);
-  if (!stored) return [];
+  const stored = await AsyncStorage.getItem('transactions');
+  const transactions: Transaction[] = stored ? JSON.parse(stored) : [];
 
-  const all: Transaction[] = JSON.parse(stored);
   const now = new Date();
-  return all.filter((t) => {
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  return transactions.filter(t => {
     const date = new Date(t.date);
-    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
   });
 }
 
