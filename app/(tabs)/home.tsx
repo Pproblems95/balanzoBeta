@@ -2,11 +2,24 @@ import { StyleSheet, Text, View, Modal, TextInput, TouchableOpacity, ScrollView 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 
+import { PolarChart, Pie } from "victory-native"; 
+
 import TransactionButton from '../../components/TransactionButton';
 import { useHomeViewModel } from '../../viewmodels/HomeViewModel';
 import { TransactionModal } from '../../components/TransactionModal';
 import { getTransactionsForCurrentMonth, saveTransaction } from '../../viewmodels/storageService';
-import { PieChartBalance } from '../../components/PieChartBalance';
+
+// DATOS DE PRUEBA SÚPER SIMPLIFICADOS PARA PIE.CHART
+interface SimplePieDataItem {
+  label: string;
+  value: number;
+  color: string;
+  [key: string]: unknown; // <-- ¡Añadir esta línea!
+}
+
+
+
+
 
 
 const home = () => {
@@ -17,6 +30,16 @@ const home = () => {
   const [totalIncome, setTotalIncome] = useState(0);
   const [totalExpense, setTotalExpense] = useState(0);
 
+
+  const PIE_TEST_DATA: SimplePieDataItem[] = [];
+
+  if (totalIncome > 0) {
+    PIE_TEST_DATA.push({ label: "Ingresos", value: totalIncome, color: "#16a34a" });
+  }
+  if (totalExpense > 0) {
+    PIE_TEST_DATA.push({ label: "Gastos", value: totalExpense, color: "#dc2626" });
+  }
+ 
   useEffect(() => {
     loadMonthlyTotals();
   }, []);
@@ -45,6 +68,9 @@ const home = () => {
     setTotalIncome(income);
     setTotalExpense(expense);
   };
+
+   
+
 
   return (
     <ScrollView className='flex-1'>
@@ -80,14 +106,28 @@ const home = () => {
             <TransactionButton text='Gasto' onPress={showExpenseModal} />
           </View>
         </View>
-        <View className='bg-blue-400 mx-5 mt-10'>
+
+        {/* --- INICIO DEL CÓDIGO DE PRUEBA DE PIE CHART --- */}
+        <View style={{ height: 300, borderWidth: 1, borderColor: 'purple', margin: 20 }}>
+          <PolarChart
+            data={PIE_TEST_DATA}
+            labelKey="label"
+            valueKey="value"
+            colorKey="color"
+          >
+            <Pie.Chart innerRadius={0} size={300} />
+          </PolarChart>
+        </View>
+        {/* --- FIN DEL CÓDIGO DE PRUEBA DE PIE CHART --- */}
+
+        {/* <View className=' '>
           <PieChartBalance
             income={totalIncome}
             expense={totalExpense}
             title="Resumen de este mes"
           />
-        </View>
-        
+        </View> */}
+
       </View>
       <TransactionModal
         visible={modalVisible}

@@ -3,14 +3,20 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { PolarChart, Pie } from 'victory-native';
-// Si quisieras controlar la fuente de forma avanzada, importarías esto:
-// import { useFont, Text as SkiaText } from '@shopify/react-native-skia';
 
-interface ChartData extends Record<string, unknown> {
-  label: string;
-  value: number;
+interface SimplePieDataItem {
+  x: string;
+  y: number;
   color: string;
+  [key: string]: unknown;
 }
+
+const PIE_TEST_DATA: SimplePieDataItem[] = [
+  { x: "Manzanas", y: 30, color: "#ff6384" },
+  { x: "Naranjas", y: 20, color: "#36a2eb" },
+  { x: "Peras", y: 15, color: "#ffce56" },
+  { x: "Uvas", y: 35, color: "#4bc0c0" },
+];
 
 interface PieChartBalanceProps {
   income: number;
@@ -19,52 +25,33 @@ interface PieChartBalanceProps {
 }
 
 export function PieChartBalance({ income, expense, title }: PieChartBalanceProps) {
-  const displayIncome = income > 0 ? income : 0.0001;
-  const displayExpense = expense > 0 ? expense : 0.0001;
+    const chartData = PIE_TEST_DATA; // Usamos los datos de prueba que sabemos que funcionan
 
-  const chartData: ChartData[] = [
-    { label: 'Ingresos', value: displayIncome, color: '#16a34a' },
-    { label: 'Gastos', value: displayExpense, color: '#dc2626' },
-  ];
+    console.log("PieChartBalance - Datos de PRUEBA (que funcionaron en home.tsx):", chartData);
 
-  const hasActualData = income > 0 || expense > 0;
-
-  return (
-    <View style={styles.container}>
-      {title && <Text style={styles.title}>{title}</Text>}
-      {!hasActualData ? (
-        <Text style={styles.noDataText}>No hay datos para mostrar el gráfico este mes.</Text>
-      ) : (
+    return (
+      <View style={styles.container}>
+        {title && <Text style={styles.title}>{title}</Text>}
+        
+        {/* Aquí usamos el estilo `chartWrapper` para el contenedor del gráfico */}
         <View style={styles.chartWrapper}>
-         <PolarChart 
-  data={chartData}
-  labelKey="label"
-  valueKey="value"
-  colorKey="color" 
->
-  <Pie.Chart >
-        {({ slice }) => (
-          <Pie.Slice
-            key={slice.label}
+          <PolarChart<SimplePieDataItem, "x", "y", "color">
+            data={chartData}
+            labelKey="x"
+            valueKey="y"
+            colorKey="color"
           >
-            <Pie.Label
-              text={`${slice.label}\n$${slice.value.toFixed(2)}`}
-              color="black"
-              radiusOffset={20}
-            />
-          </Pie.Slice>
-        )}
-      </Pie.Chart>
-    </PolarChart>
+            {/* El tamaño del Pie.Chart debe ser igual o menor que el contenedor */}
+            <Pie.Chart innerRadius={0} size={300} />
+          </PolarChart>
         </View>
-      )}
-    </View>
-  );
+      </View>
+    );
 }
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'center',
+    alignItems: 'center', // Centra horizontalmente el contenido de este contenedor (incluyendo el título y chartWrapper)
     marginVertical: 16,
     padding: 10,
     backgroundColor: '#fff',
@@ -82,11 +69,14 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   chartWrapper: {
-    height: 300,
-    width: 300,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor:'green'
+    height: 300, // Altura fija para el contenedor
+    width: 300,  // Ancho fijo para el contenedor
+    justifyContent: 'center', // **Centra verticalmente** los elementos hijos (PolarChart)
+    alignItems: 'center',     // **Centra horizontalmente** los elementos hijos (PolarChart)
+    borderWidth: 1,
+    borderColor: 'purple',
+    // Si quieres el margen de 20px, puedes agregarlo aquí:
+    // margin: 20,
   },
   noDataText: {
     fontSize: 16,
