@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { getMonthlyPerformance, insertMockCuts, getAllCuts } from '../../viewmodels/storageService'; 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// --- INTERFACES NECESARIAS ---
+
 interface MonthPerformance {
   month: number;
   year: number;
@@ -14,7 +14,6 @@ interface GroupedYearData {
   year: number;
   months: { month: number; balance: number }[];
 }
-// --- FIN INTERFACES ---
 
 const monthsNames = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -71,7 +70,6 @@ const HistoryScreen = () => {
           className="bg-white border border-gray-200 rounded-xl px-4 py-3 mb-2 shadow-sm"
           onPress={() => {
             console.log(`Presionado: ${monthsNames[month - 1]} ${item.year} con saldo $${balance.toFixed(2)}`);
-            // Aquí irá tu navegación a la pantalla de detalles del corte
           }}
         >
           <Text className="text-xl text-black text-center">
@@ -84,25 +82,23 @@ const HistoryScreen = () => {
   );
   try{
     return (
-    <View className="flex-1 m-2"> {/* Equivalente a style={{flex: 1}} */}
+    <View className="flex-1 m-2"> 
       <FlatList
         data={groupedData}
         renderItem={renderYearItem}
         keyExtractor={(item) => item.year.toString()}
-        // contentContainerStyle para FlatList se convierte a className
-        // Asegura que el FlatList ocupe todo el espacio disponible si no hay elementos
         className="px-4 py-6 bg-white min-h-full" 
         ListEmptyComponent={
-          <View className="flex-1 justify-center items-center mt-12"> {/* mt-12 para marginTop: 50 */}
-            <Text className="text-base text-gray-600">No hay historial de balance disponible.</Text> {/* text-gray-600 para color: #888 */}
+          <View className="flex-1 justify-center items-center mt-12"> 
+            <Text className="text-base text-gray-600">No hay historial de balance disponible.</Text> 
           </View>
         }
       />
 
-      {/* --- Botones de Depuración --- */}
-      <View className="p-4 border-t border-t-gray-200 bg-purple-700flex-1"> {/* p-4 para padding: 10, border-t para borderTopWidth, bg-gray-100 para #f5f5f5 */}
+      
+      <View className="p-4 border-t border-t-gray-200 bg-purple-700flex-1"> 
         <TouchableOpacity
-          className="bg-purple-700 p-3 rounded-lg mb-2" // bg-purple-700 para #6200EE, p-3 para padding: 12, rounded-lg para borderRadius: 8, mb-2 para marginBottom: 8
+          className="bg-purple-700 p-3 rounded-lg mb-2" 
           onPress={async () => {
             console.log('Intentando insertar cortes de prueba manualmente...');
             await insertMockCuts();
@@ -124,7 +120,7 @@ const HistoryScreen = () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          className="bg-red-500 p-3 rounded-lg mb-2" // Usamos red-500 para el botón de borrar
+          className="bg-red-500 p-3 rounded-lg mb-2" 
           onPress={async () => {
             await AsyncStorage.removeItem('cuts');
             await loadHistoryData();
@@ -134,11 +130,10 @@ const HistoryScreen = () => {
           <Text className="text-white text-center font-bold">Borrar "cuts" en AsyncStorage</Text>
         </TouchableOpacity>
       </View>
-      {/* --- Fin Botones de Depuración --- */}
     </View>
   );
   }catch{
-    
+
   }
   
 };

@@ -9,9 +9,28 @@ import { Income, Expense } from '../models/Transaction';
 const TRANSACTIONS_KEY = 'transactions';
 const CUTS_KEY = 'cuts';
 
-/**
- * Saves a new transaction (income or expense).
- */
+// PATRÓN OBSERVADOR 
+
+type BalanceObserver = () => void;
+
+let balanceObservers: BalanceObserver[] = [];
+
+export function subscribeToBalanceChanges(callback: BalanceObserver) {
+  balanceObservers.push(callback);
+  return () => {
+    balanceObservers = balanceObservers.filter(obs => obs !== callback);
+  };
+}
+
+function notifyBalanceChanged() {
+  balanceObservers.forEach(callback => callback());
+}
+
+
+
+// PATRÓN FACHADA
+
+
 export async function saveTransaction(
   type: TransactionType,
   id: string,
@@ -19,19 +38,15 @@ export async function saveTransaction(
   amount: number,
   date: string
 ) {
-  console.log('saving transaction...');
   const newTransaction = TransactionFactory.createTransaction(type, id, title, amount, date);
   const stored = await AsyncStorage.getItem(TRANSACTIONS_KEY);
   const transactions: Transaction[] = stored ? JSON.parse(stored) : [];
   transactions.push(newTransaction);
   
   await AsyncStorage.setItem(TRANSACTIONS_KEY, JSON.stringify(transactions));
-  console.log('Transaction saved.');
+  notifyBalanceChanged(); // Notificación del Observador
 }
 
-/**
- * Gets all transactions for the current month.
- */
 export async function getTransactionsForCurrentMonth(): Promise<Transaction[]> {
   const stored = await AsyncStorage.getItem('transactions');
   const transactions: Transaction[] = stored ? JSON.parse(stored) : [];
@@ -46,22 +61,16 @@ export async function getTransactionsForCurrentMonth(): Promise<Transaction[]> {
   });
 }
 
-/**
- * Saves a monthly cut.
- */
 export async function saveCut(cut: Cut) {
   const stored = await AsyncStorage.getItem(CUTS_KEY);
   const cuts: Cut[] = stored ? JSON.parse(stored) : [];
   cuts.push(cut);
   await AsyncStorage.setItem(CUTS_KEY, JSON.stringify(cuts));
 
-  // Clears current transactions after the cut
   await AsyncStorage.removeItem(TRANSACTIONS_KEY);
+  notifyBalanceChanged(); // Notificación del Observador
 }
 
-/**
- * Gets all saved cuts.
- */
 export async function getAllCuts(): Promise<Cut[]> {
   const stored = await AsyncStorage.getItem(CUTS_KEY);
   const rawCuts: Cut[] = stored ? JSON.parse(stored) : [];
@@ -76,17 +85,11 @@ export async function getAllCuts(): Promise<Cut[]> {
   }));
 }
 
-/**
- * Gets a cut by ID.
- */
 export async function getCutById(id: string): Promise<Cut | null> {
   const cuts = await getAllCuts();
   return cuts.find((c) => c.id === id) || null;
 }
 
-/**
- * Calculates the financial performance for the last 12 months.
- */
 export async function getMonthlyPerformance(): Promise<MonthPerformance[]> {
   const cuts = await getAllCuts();
   const sorted = cuts.sort((a, b) => {
@@ -104,9 +107,6 @@ export async function getMonthlyPerformance(): Promise<MonthPerformance[]> {
   }));
 }
 
-/**
- * Inserts mock transaction data into local storage.
- */
 export async function insertMockData() {
   const mockTransactions: Transaction[] = [
     TransactionFactory.createTransaction('income', 't1', 'Salary', 6000, new Date().toISOString()),
@@ -116,22 +116,16 @@ export async function insertMockData() {
   ];
 
   await AsyncStorage.setItem(TRANSACTIONS_KEY, JSON.stringify(mockTransactions));
-  console.log('Mock transactions inserted.');
+  notifyBalanceChanged(); // Notificación del Observador
 }
 
-
-
-/**
- * Inserts mock monthly cut data into local storage.
- * This is useful for populating the history.
- */
 export async function insertMockCuts() {
   const existingCuts: Cut[] = await getAllCuts();
 
   const mockCuts: Cut[] = [
     {
       id: 'cut-2025-02',
-      month: 2, // February
+      month: 2, 
       year: 2025,
       balance: 1500, 
       createdAt: new Date('2025-02-28T23:59:59Z').toISOString(),
@@ -142,7 +136,7 @@ export async function insertMockCuts() {
     },
     {
       id: 'cut-2025-03',
-      month: 3, // March
+      month: 3, 
       year: 2025,
       balance: 2800, 
       createdAt: new Date('2025-03-31T23:59:59Z').toISOString(),
@@ -154,7 +148,7 @@ export async function insertMockCuts() {
     },
     {
       id: 'cut-2025-04',
-      month: 4, // April
+      month: 4, 
       year: 2025,
       balance: 950, 
       createdAt: new Date('2025-04-30T23:59:59Z').toISOString(),
@@ -164,19 +158,18 @@ export async function insertMockCuts() {
       ],
     },
     {
-      id: 'cut-2024-12', // May 2025 (as an example for the current month)
+      id: 'cut-2024-12', 
       month: 12,
       year: 2024,
       balance: 2500,
-      createdAt: new Date('2024-12-26T10:00:00Z').toISOString(), // Current date/time example
+      createdAt: new Date('2024-12-26T10:00:00Z').toISOString(), 
       transactions: [
-        TransactionFactory.createTransaction('income', 'may-t1', 'May Salary', 6000, '2025-05-15T10:00:00Z'),
-        TransactionFactory.createTransaction('expense', 'may-t2', 'Various May Expenses', 3500, '2025-05-20T11:00:00Z'),
+        TransactionFactory.createTransaction('income', 'dic-t1', 'Diciembre Salary', 6000, '2024-12-15T10:00:00Z'),
+        TransactionFactory.createTransaction('expense', 'dic-t2', 'Diciembre Expenses', 3500, '2024-12-20T11:00:00Z'),
       ],
     }
   ];
 
-  // Filters to prevent duplicates if cuts with those IDs already exist
   const cutsToSave = mockCuts.filter(mockCut => 
     !existingCuts.some(existingCut => existingCut.id === mockCut.id)
   );
@@ -184,8 +177,14 @@ export async function insertMockCuts() {
   if (cutsToSave.length > 0) {
     const updatedCuts = [...existingCuts, ...cutsToSave];
     await AsyncStorage.setItem(CUTS_KEY, JSON.stringify(updatedCuts));
-    console.log(`Inserted ${cutsToSave.length} mock cuts.`);
-  } else {
-    console.log('All mock cuts already exist or no new ones to insert.');
+    notifyBalanceChanged(); // Notificación del Observador
   }
 }
+
+export async function clearAllDataForDebugging() {
+  await AsyncStorage.removeItem(TRANSACTIONS_KEY);
+  await AsyncStorage.removeItem(CUTS_KEY);
+  notifyBalanceChanged(); // Notificación del Observador
+}
+
+// --- FIN: IMPLEMENTACIÓN DEL PATRÓN FACHADA ---
