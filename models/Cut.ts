@@ -6,6 +6,7 @@ export interface Cut {
     year: number;
     transactions: Transaction[];
     createdAt: string;
+    balance: number;
 }
 
 export function calculateCutBalance(transactions: Transaction[]): number {

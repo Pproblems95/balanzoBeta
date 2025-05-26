@@ -73,10 +73,10 @@ const home = () => {
 
 
   return (
-    <ScrollView className='flex-1'>
+    <View className='flex-1'>
       <View className='bg-white mx-5 mt-10'>
         <View className='p-5'>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             className="bg-blue-500 p-3 rounded-lg"
             onPress={async () => {
               const raw = await AsyncStorage.getItem('transactions');
@@ -84,7 +84,7 @@ const home = () => {
             }}
           >
             <Text className="text-white text-center font-semibold">Ver transacciones</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           <Text className='text-3xl'>Hola, usuario!</Text>
           <Text className='text-3xl my-5'>Este es tu balance este mes:</Text>
           <View className='flex-row justify-between'>
@@ -106,9 +106,10 @@ const home = () => {
             <TransactionButton text='Gasto' onPress={showExpenseModal} />
           </View>
         </View>
-
+          <Text className='text-center text-bold text-2xl'>Resumen de este mes</Text>
         {/* --- INICIO DEL CÓDIGO DE PRUEBA DE PIE CHART --- */}
-        <View style={{ height: 300, borderWidth: 1, borderColor: 'purple', margin: 20 }}>
+        <View style={{ height: 300, borderColor: 'purple', margin: 20, zIndex:0 }}>
+          
           <PolarChart
             data={PIE_TEST_DATA}
             labelKey="label"
@@ -129,6 +130,7 @@ const home = () => {
         </View> */}
 
       </View>
+      <View style={{ flex: 1, zIndex: 100 }}>
       <TransactionModal
         visible={modalVisible}
         type={transactionType}
@@ -152,7 +154,8 @@ const home = () => {
           setModalVisible(false);
         }}
       />
-    </ScrollView>
+      </View>
+    </View>
   );
 };
 
