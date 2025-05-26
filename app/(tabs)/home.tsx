@@ -1,27 +1,21 @@
-import { StyleSheet, Text, View, Modal, TextInput, TouchableOpacity } from 'react-native'
+import { StyleSheet, Text, View, Modal, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
-import TransactionButton from '../../components/TransactionButton'
+
+import TransactionButton from '../../components/TransactionButton';
 import { useHomeViewModel } from '../../viewmodels/HomeViewModel';
 import { TransactionModal } from '../../components/TransactionModal';
 import { getTransactionsForCurrentMonth, saveTransaction } from '../../viewmodels/storageService';
-
-// NO importamos PieChartBalance ya que lo insertaremos directamente
-// import { PieChartBalance } from '../../components/PieChartBalance';
-
-// Importa VictoryPie y Svg directamente aquí
-import { VictoryPie } from 'victory'; // Recuerda que VictoryPie viene de 'victory'
-import Svg from 'react-native-svg'; // Y Svg de 'react-native-svg'
+import { PieChartBalance } from '../../components/PieChartBalance';
 
 
 const home = () => {
-
   const vm = useHomeViewModel();
   const [hidden, setHidden] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>('income');
-  const [totalIncome, setTotalIncome] = useState(0); // Estos los usaremos en la gráfica de pastel si quieres
-  const [totalExpense, setTotalExpense] = useState(0); // Estos los usaremos en la gráfica de pastel si quieres
+  const [totalIncome, setTotalIncome] = useState(0);
+  const [totalExpense, setTotalExpense] = useState(0);
 
   useEffect(() => {
     loadMonthlyTotals();
@@ -52,16 +46,8 @@ const home = () => {
     setTotalExpense(expense);
   };
 
-  // Datos para la gráfica de pastel simple, usando los mismos datos que ya tienes
-  const pieData = [
-    { x: 'Ingresos', y: totalIncome || 1 }, // Asegurarse de que no sea 0 para que se dibuje
-    { x: 'Gastos', y: totalExpense || 1 }   // si ambos son 0, dará un valor mínimo de 1 para que se vea
-  ];
-  const pieColors = ['#16a34a', '#dc2626'];
-
-
   return (
-    <View className='flex-1'>
+    <ScrollView className='flex-1'>
       <View className='bg-white mx-5 mt-10'>
         <View className='p-5'>
           <TouchableOpacity
@@ -82,7 +68,7 @@ const home = () => {
               </Text>
             </View>
             <TransactionButton text={hidden ? 'Revelar' : 'Ocultar'} onPress={() => {
-              if(!hidden){
+              if (!hidden) {
                 setHidden(true);
                 return;
               }
@@ -94,35 +80,25 @@ const home = () => {
             <TransactionButton text='Gasto' onPress={showExpenseModal} />
           </View>
         </View>
-        <View className='bg-white mx-5 mt-10'>
-            {/* Aquí insertamos la gráfica de pastel directamente */}
-            <Text className="text-lg font-bold mb-2 text-center">Resumen de este mes</Text>
-            <Svg width={300} height={300}>
-              <VictoryPie
-                data={pieData}
-                colorScale={pieColors}
-                innerRadius={50}
-                // labelRadius={75} // Quitado para máxima simplicidad, si quieres, lo añades
-                // labels={({ datum }) => `${datum.x}\n$${datum.y}`} // Quitado, si quieres, lo añades
-                // style={{
-                //   labels: { fill: 'black', fontSize: 14, fontWeight: 'bold' },
-                // }} // Quitado, si quieres, lo añades
-              />
-            </Svg>
+        <View className='bg-blue-400 mx-5 mt-10'>
+          <PieChartBalance
+            income={totalIncome}
+            expense={totalExpense}
+            title="Resumen de este mes"
+          />
         </View>
+        
       </View>
       <TransactionModal
         visible={modalVisible}
         type={transactionType}
         onClose={() => setModalVisible(false)}
         onSubmit={async (title, amount) => {
-
           console.log('entrando a submit');
-          try{
-          const now = new Date().toISOString();
-          const id = Date.now().toString() + Math.random().toString(36).substring(2);
-          console.log('entrando a savetransaction');
-
+          try {
+            const now = new Date().toISOString();
+            const id = Date.now().toString() + Math.random().toString(36).substring(2);
+            console.log('entrando a savetransaction');
 
             console.log('Antes de saveTransaction');
             await saveTransaction(transactionType, id, title, amount, now);
@@ -136,10 +112,10 @@ const home = () => {
           setModalVisible(false);
         }}
       />
-    </View>
-  )
-}
+    </ScrollView>
+  );
+};
 
-export default home
+export default home;
 
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({});
